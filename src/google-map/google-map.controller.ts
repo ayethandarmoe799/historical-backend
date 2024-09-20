@@ -7,8 +7,8 @@ export class GoogleMapsController {
   public apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   @Get('historical')
-  async getHistoricalPlaces(@Query('country') country: string) {
-    const places = await this.googleMapsService.findHistoricalPlaces(country);
+  async getHistoricalPlaces(@Query('location') location: string) {
+    const places = await this.googleMapsService.findHistoricalPlaces(location);
 
     return places.map(place => ({
       id: place.id,
@@ -35,5 +35,24 @@ export class GoogleMapsController {
       height: photo.height,
     })
     )};
+  }
+
+  @Get('search')
+  async getSearchPlaceByCity(@Query('city') city: string) {
+    let searchPlace = await this.googleMapsService.getSearchPlaceByCity(city);
+    return searchPlace.map(place => ({
+      id: place.id,
+      name: place.name,
+      address: place.address,
+      rating: place.rating,
+      opening_hours: place.opening_hours,
+      user_rating_total: place.user_rating_total,
+      types: place.types,
+      photos: place.photos.map(photo => ({
+        url: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${photo.width}&photoreference=${photo.photo_reference}&key=${this.apiKey}`,
+        width: photo.width,
+        height: photo.height,
+      })),
+    }))
   }
 }

@@ -11,15 +11,14 @@ export class GoogleMapsService {
     this.client = new Client({});
   }
 
-  async getLatLngByCountry(country: string) {
-    // console.log('country>>>>>>', country);
-    const apiKey = this.configService.get<string>('GOOGLE_MAPS_API_KEY');
+  private apiKey = this.configService.get<string>('GOOGLE_MAPS_API_KEY')
 
+  async getLatLngByCity(city: string) {
     try {
       const response = await this.client.geocode({
         params: {
-          address: country,
-          key: apiKey,
+          address: city,
+          key: this.apiKey,
         },
         timeout: 3000,
       });
@@ -36,21 +35,15 @@ export class GoogleMapsService {
     }
   }
 
-  async findHistoricalPlaces(country: string) {
-    const apiKey = this.configService.get<string>('GOOGLE_MAPS_API_KEY');
-
-     // Get lat/lng for the country
-    const location = await this.getLatLngByCountry(country);
-    const { lat, lng } = location;
-
+  async findHistoricalPlaces(location: string) {
     try {
       const response = await this.client.placesNearby({
         params: {
-          location: `${lat}, ${lng}`,
+          location,
           radius: 500000, 
           type: 'tourist_attraction', 
           keyword: 'historical', 
-          key: apiKey,
+          key: this.apiKey,
         },
         timeout: 1000,
       });
@@ -75,22 +68,26 @@ export class GoogleMapsService {
   }
 
   async getPlaceDetails(placeId: string) {
-    const apiKey = this.configService.get<string>('GOOGLE_MAPS_API_KEY');
-    
     try {
       const response = await this.client.placeDetails({
         params: {
           place_id: placeId,
-          key: apiKey,
+          key: this.apiKey,
           fields: ['name', 'formatted_address', 'formatted_phone_number', 'photos', 'rating', 'opening_hours', 'reviews', 'editorial_summary'],
         },
-        timeout: 1000, // milliseconds
+        timeout: 1000,
       });
   
-      return response.data.result; // Detailed place information
+      return response.data.result;
     } catch (error) {
       throw new HttpException('Error fetching place details', HttpStatus.BAD_REQUEST);
     }
   }
-}
 
+  async getSearchPlaceByCity(city: string) {
+    const location = await this.getLatLngByCity(city);
+    const latLng = `${location.lat}, ${location.lng}`;
+    const places = await this.findHistoricalPlaces(latLng);
+    return places;
+  }
+}
