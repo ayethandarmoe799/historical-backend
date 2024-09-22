@@ -42,5 +42,5 @@ $ npm run test:cov
 
 ## Resources
 
-I am using google map api for retriving location data.
+I am using google map api for retrieving location data.
 
